@@ -426,9 +426,7 @@ mod revocability {
             "revocable attestation rejected under a revocable schema"
         );
 
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&att.uid).unwrap()
-        });
+        let stored = sas_client.get_attestation(&att.uid).unwrap();
         assert!(stored.revocable);
     }
 
@@ -452,9 +450,7 @@ mod revocability {
         );
 
         for att in [&first, &second] {
-            let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-                fx.env.storage().persistent().get(&att.uid).unwrap()
-            });
+            let stored = sas_client.get_attestation(&att.uid).unwrap();
             assert!(stored.revocable);
         }
     }
@@ -477,9 +473,7 @@ mod revocability {
             "revocable paid attestation rejected under a revocable schema"
         );
 
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&att.uid).unwrap()
-        });
+        let stored = sas_client.get_attestation(&att.uid).unwrap();
         assert!(stored.revocable);
     }
 
@@ -771,9 +765,7 @@ mod resolver_semantics {
         // Atomicity: the whole call rolled back, so `old_uid` was never
         // actually revoked even though revoke_internal ran before the
         // rejected attest_internal call within the same invocation.
-        let stored_old: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&old_uid).unwrap()
-        });
+        let stored_old: Attestation = sas_client.get_attestation(&old_uid).unwrap();
         assert_eq!(stored_old.revocation_time, 0);
     }
 }
@@ -935,9 +927,7 @@ mod revoke_resolver_semantics {
         fx.env.ledger().with_mut(|li| li.timestamp = 1000);
         let res = sas_client.try_revoke(&uid);
         assert!(res.is_ok());
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&uid).unwrap()
-        });
+        let stored: Attestation = sas_client.get_attestation(&uid).unwrap();
         assert_ne!(stored.revocation_time, 0);
     }
 
@@ -952,9 +942,7 @@ mod revoke_resolver_semantics {
         // All-or-nothing: the rejection rolls back the revocation_time
         // write and event this same call already made, not just the parts
         // after the resolver call.
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&uid).unwrap()
-        });
+        let stored: Attestation = sas_client.get_attestation(&uid).unwrap();
         assert_eq!(stored.revocation_time, 0);
     }
 
@@ -965,9 +953,7 @@ mod revoke_resolver_semantics {
 
         let res = sas_client.try_revoke(&uid);
         assert_eq!(res, Err(Ok(SASError::ResolverRejected.into())));
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&uid).unwrap()
-        });
+        let stored: Attestation = sas_client.get_attestation(&uid).unwrap();
         assert_eq!(stored.revocation_time, 0);
     }
 
@@ -978,9 +964,7 @@ mod revoke_resolver_semantics {
 
         let res = sas_client.try_revoke(&uid);
         assert_eq!(res, Err(Ok(SASError::ResolverRejected.into())));
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&uid).unwrap()
-        });
+        let stored: Attestation = sas_client.get_attestation(&uid).unwrap();
         assert_eq!(stored.revocation_time, 0);
     }
 
@@ -993,9 +977,7 @@ mod revoke_resolver_semantics {
         let res = sas_client.try_multi_revoke(&batch);
         assert_eq!(res, Err(Ok(SASError::ResolverRejected.into())));
 
-        let stored: Attestation = fx.env.as_contract(&fx.sas_client_id, || {
-            fx.env.storage().persistent().get(&uid).unwrap()
-        });
+        let stored: Attestation = sas_client.get_attestation(&uid).unwrap();
         assert_eq!(stored.revocation_time, 0);
     }
 }
